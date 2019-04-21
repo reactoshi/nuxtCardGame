@@ -5,6 +5,10 @@
         v-for="card in $store.state.rooms[roomId].cards"
         :key="card.src"
         :src="card.opened ? card.src : backside"
+        :cardNum="card.num"
+        :style= "{
+          display : card.isShow
+        }"
         @click="openCard(card.src)"
       >
       <div class="room-btn-box">
@@ -46,15 +50,17 @@ export default {
       this.$store.commit('addRoom', {
         cards: randomList.map(src => ({
           src,
+          num: parseInt(src.replace(/[^0-9]/g, '')),
           matched: false,
-          opened: false
+          opened: false,
+          isShow: 'inline-block'
         }))
       })
     }
   },
   methods: {
     openCard(src) {
-      this.$store.commit('openCard', { roomId: this.roomId, src })
+      this.$store.commit('openCard', { roomId: this.roomId, src, isShow: 'inline-block', num: parseInt(src.replace(/[^0-9]/g, '')), opened: false })
     }
   }
 }
