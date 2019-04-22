@@ -3,6 +3,17 @@ let even = false
 let cardFirst = 0
 let cardFirstFull = 0
 
+// sleep function を用いてn秒後に処理を実行する
+const sleep = (waitSeconds, someFunction) => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve(someFunction())
+    }, waitSeconds * 1000)
+  })
+}
+const hello = () => console.log('hello')
+sleep(1, hello)
+
 export const state = () => ({
   rooms: JSON.parse(localStorage.trump_data || '[]')
 })
@@ -25,7 +36,10 @@ export const mutations = {
     if (clickCount % 2 === 0) {
       even = true
       setTimeout(() => {
-        src = '../assets/z01.gif'
+        console.log(state.rooms[0].cards[0].src)
+        // state.rooms[0].cards[0].src = '/_nuxt/assets/z01.gif'
+        opened = false
+        console.log(state.rooms[0].cards[0].src)
         console.log('裏返す')
       }, 500)
     } else {
@@ -45,40 +59,30 @@ export const mutations = {
           cardNum = cardNum % 39
         }
         console.log('１から１３まで', cardNum)
-        // console.log(typeof (cardNum))
-        if (even === false) {
-          cardFirst = cardNum
-          cardFirstFull = num
-        }
-        if (even === true) {
-          if (cardFirst === cardNum) {
-            if (cardFirstFull !== num) {
-            // room.cards[cardNum - 1].isShow = 'none'
-            // room.cards[cardFirst - 1].isShow = 'none'
-              // console.log(cardFirstFull + 0)
-              console.log('当たり！ここで２枚を削除する')
-
-            // console.log(cardFirstFull)
-            // room.cards[room.cards[cardFirstFull].num - 1].isShow = 'none'
-            // console.log(cardFirstFull)
-            // console.log(room.cards)
-            // console.log(room.cards[cardNum])
-            // console.log(room.cards[cardNum] = 0)
-            } else {
-              console.log('同じカードは選べません')
-            }
-          }
-        }
         return {
           cards: room.cards.map((card) => {
-            if (even === true) {
-              // setTimeout(() => {
-              //   // return { ...card, src: '../assets/z01.gif' }
-              //   console.log('裏返す')
-              //   return { ...card, src: '../assets/z01.gif', opened: false }
-              // }, 500)
+            const checkCardTrue = () => card.src === src ? { ...card, opened: true } : card
+            const checkCardFalse = () => card.src === src ? { ...card, opened: false } : card
+
+            if (even === false) {
+              console.log('1枚目')
+              cardFirst = cardNum
+              cardFirstFull = num
             }
-            return card.src === src ? { ...card, opened: true } : card
+            if (even === true) {
+              console.log('2枚目')
+              if (cardFirst === cardNum) {
+                if (cardFirstFull !== num) {
+                  console.log('当たり！ここで２枚を削除する')
+                } else {
+                  console.log('同じカードは選べません')
+                  console.log(opened)
+                  return checkCardFalse()
+                }
+              }
+              // return checkCardFalse()
+            }
+            return checkCardTrue()
           })
         }
       } else {
