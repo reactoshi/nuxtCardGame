@@ -77,7 +77,7 @@ export const mutations = {
                 } else {
                   console.log('同じカードは選べません')
                   console.log(opened)
-                  return checkCardFalse()
+                  return sleep(checkCardFalse(), 2)
                 }
               }
               // return checkCardFalse()
