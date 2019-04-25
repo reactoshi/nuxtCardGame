@@ -3,28 +3,17 @@ let even = false
 let cardFirst = 0
 let cardFirstFull = 0
 
-// sleep function を用いてn秒後に処理を実行する
-const sleep = (waitSeconds, someFunction) => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(someFunction())
-    }, waitSeconds * 1000)
-  })
-}
-const hello = () => console.log('hello')
-sleep(1, hello)
-
 export const state = () => ({
   rooms: JSON.parse(localStorage.trump_data || '[]')
 })
 
-export const plugins = [
-  (store) => {
-    store.subscribe(() => {
-      localStorage.trump_data = JSON.stringify(store.state.rooms)
-    })
-  }
-]
+// export const plugins = [
+//   (store) => {
+//     store.subscribe(() => {
+//       localStorage.trump_data = JSON.stringify(store.state.rooms)
+//     })
+//   }
+// ]
 
 export const mutations = {
   addRoom(state, room) {
@@ -62,7 +51,8 @@ export const mutations = {
         return {
           cards: room.cards.map((card) => {
             const checkCardTrue = () => card.src === src ? { ...card, opened: true } : card
-            const checkCardFalse = () => card.src === src ? { ...card, opened: false } : card
+            const checkCardFalse = () => card.src === 'undefined' ? { ...card, opened: false } : card
+            const sleep = msec => new Promise(resolve => setTimeout(resolve, msec))
 
             if (even === false) {
               console.log('1枚目')
@@ -76,8 +66,7 @@ export const mutations = {
                   console.log('当たり！ここで２枚を削除する')
                 } else {
                   console.log('同じカードは選べません')
-                  console.log(opened)
-                  return sleep(checkCardFalse(), 2)
+                  sleep(2000).then(() => return checkCardFalse())
                 }
               }
               // return checkCardFalse()
