@@ -1,82 +1,69 @@
-let clickCount = 0
-let even = false
-let cardFirst = 0
-let cardFirstFull = 0
-
 export const state = () => ({
-  rooms: JSON.parse(localStorage.trump_data || '[]')
+  rooms: []
 })
 
-// export const plugins = [
-//   (store) => {
-//     store.subscribe(() => {
-//       localStorage.trump_data = JSON.stringify(store.state.rooms)
-//     })
-//   }
-// ]
-
 export const mutations = {
-  addRoom(state, room) {
-    state.rooms = [...state.rooms, room]
-  },
-  openCard(state, { roomId, src, num, opened }) {
-    // console.log(num)
-    clickCount++
-    if (clickCount % 2 === 0) {
-      even = true
-      setTimeout(() => {
-        console.log(state.rooms[0].cards[0].src)
-        // state.rooms[0].cards[0].src = '/_nuxt/assets/z01.gif'
-        opened = false
-        console.log(state.rooms[0].cards[0].src)
-        console.log('裏返す')
-      }, 500)
-    } else {
-      even = false
-    }
-    console.log('固定番号', num)
-    state.rooms = state.rooms.map((room, i) => {
-      if (i === roomId) {
-        let cardNum = num
-        if (cardNum <= 13) {
-          // cardNum
-        } else if (cardNum >= 14 && cardNum <= 26) {
-          cardNum = cardNum % 13
-        } else if (cardNum >= 27 && cardNum <= 39) {
-          cardNum = cardNum % 26
-        } else if (cardNum >= 40 && cardNum <= 52) {
-          cardNum = cardNum % 39
-        }
-        console.log('１から１３まで', cardNum)
-        return {
-          cards: room.cards.map((card) => {
-            const checkCardTrue = () => card.src === src ? { ...card, opened: true } : card
-            const checkCardFalse = () => card.src === 'undefined' ? { ...card, opened: false } : card
-            const sleep = msec => new Promise(resolve => setTimeout(resolve, msec))
+  setRoom(state, { room, roomId }) {
+    state.rooms = [...state.rooms]
+    state.rooms[roomId] = room
+  }
+}
 
-            if (even === false) {
-              console.log('1枚目')
-              cardFirst = cardNum
-              cardFirstFull = num
-            }
-            if (even === true) {
-              console.log('2枚目')
-              if (cardFirst === cardNum) {
-                if (cardFirstFull !== num) {
-                  console.log('当たり！ここで２枚を削除する')
-                } else {
-                  console.log('同じカードは選べません')
-                  sleep(2000).then(() => return checkCardFalse())
-                }
-              }
-              // return checkCardFalse()
-            }
-            return checkCardTrue()
-          })
-        }
+export const actions = {
+  async fetchRoom(store, roomId) {
+    const roomInfo = await this.$axios.$get(`/api/rooms/${roomId}`)
+    store.commit('setRoom', { room: roomInfo, roomId })
+  },
+  async checkRoom(store, roomId) {
+    let room = await this.$axios.$get(`/api/rooms/${roomId}`)
+
+    if (!room) {
+      await this.$axios.$post(`/api/rooms/${roomId}`)
+      room = await this.$axios.$get(`/api/rooms/${roomId}`)
+    }
+
+    store.commit('setRoom', { room, roomId })
+  },
+  async openCard(store, { roomId, num }) {
+    const room = { ...store.state.rooms[roomId] }
+    room.turn = 1 - room.turn
+    room.cards = room.cards.map((card) => {
+      if (card.num === num) {
+        return { ...card, opened: true }
       } else {
-        return room
+        return card
       }
     })
+    await this.$axios.$put(`/api/rooms/${roomId}`, room)
+
+    await store.dispatch('fetchRoom', roomId)
+  },
+  async closeCard(store, { roomId }) {
+    const room = { ...store.state.rooms[roomId] }
+
+    room.cards = room.cards.map((card) => {
+      if (card.opened) {
+        return { ...card, opened: false }
+      } else {
+        return card
+      }
+    })
+    await this.$axios.$put(`/api/rooms/${roomId}`, room)
+
+    await store.dispatch('fetchRoom', roomId)
+  },
+  async clearCard(store, { roomId, num, prevNum }) {
+    const room = { ...store.state.rooms[roomId] }
+
+    room.cards = room.cards.map((card) => {
+      if (card.num === num || card.num === prevNum) {
+        return { ...card, matched: true }
+      } else {
+        return card
+      }
+    })
+    await this.$axios.$put(`/api/rooms/${roomId}`, room)
+
+    await store.dispatch('fetchRoom', roomId)
   }
 }

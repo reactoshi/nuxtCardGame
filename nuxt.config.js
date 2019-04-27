@@ -21,7 +21,10 @@ module.exports = {
   /*
   ** Customize the progress-bar color
   */
-  loading: { color: '#fff' },
+  // loading: { color: '#fff' },
+  // 上のチカチカ消す
+  loading: false,
+
 
   /*
   ** Global CSS
